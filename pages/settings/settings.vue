@@ -103,6 +103,7 @@
 </template>
 
 <script>
+	import config from '@/utils/config.js';
 	import smsClassifier from '@/utils/sms-classifier.js';
 	import advancedAnalyzer from '@/utils/advanced-risk-analyzer.js';
 	import alertManager from '@/utils/alert-manager.js';
@@ -328,7 +329,7 @@
 			},
 			checkLoginStatus() {
 				uni.request({
-					url: 'http://192.168.10.22:5000/session', // TODO: 替换IP
+					url: `${config.BASE_URL}/session`,
 					success: (res) => {
 						if (res.statusCode === 200 && res.data.username) {
 							this.isLoggedIn = true;
@@ -365,7 +366,7 @@
 			},
 			logout() {
 				uni.request({
-					url: 'http://192.168.10.22:5000/try/logout', // TODO: 替换IP
+					url: `${config.BASE_URL}/try/logout`,
 					success: (res) => {
 						uni.showToast({
 							title: '已退出登录',

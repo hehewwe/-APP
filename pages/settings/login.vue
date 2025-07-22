@@ -28,6 +28,8 @@
 </template>
 
 <script>
+	import config from '@/utils/config.js';
+	
 	export default {
 		data() {
 			return {
@@ -53,8 +55,7 @@
 				});
 
 				uni.request({
-					// TODO: 请将IP替换为您的电脑IP
-					url: 'http://192.168.10.22:5000/try/login',
+					url: `${config.BASE_URL}/try/login`,
 					method: 'POST',
 					data: {
 						username: this.username,

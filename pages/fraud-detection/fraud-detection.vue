@@ -51,6 +51,8 @@
 </template>
 
 <script>
+	import config from '@/utils/config.js';
+
 	export default {
 		data() {
 			return {
@@ -92,7 +94,7 @@
 		methods: {
 			checkLoginStatus() {
 				uni.request({
-					url: 'http://192.168.10.22:5000/session', // TODO: 替换IP
+					url: `${config.BASE_URL}/session`,
 					success: (res) => {
 						if (res.statusCode !== 200 || !res.data.username) {
 							// 如果未登录，则提示并跳转到登录页
@@ -141,9 +143,7 @@
 				
 				// 使用 uni.request 调用后端 API
 				uni.request({
-					// !!! 重要 !!!
-					// 请确保IP地址正确，并且端口号 :5000 没有被遗漏
-					url: 'http://192.168.10.22:5000/analyze_text',
+					url: `${config.BASE_URL}/analyze_text`,
 					method: 'POST',
 					data: {
 						text: this.textToAnalyze
