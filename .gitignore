@@ -1,0 +1,13 @@
+# uni-app project
+/unpackage/
+/node_modules/
+/.idea/
+/.project
+/.settings/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+Desktop.ini 
