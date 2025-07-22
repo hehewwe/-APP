@@ -22,7 +22,7 @@
 
 ## 如何运行
 
-### 1. 运行后端服务
+### 1. 运行后端服务（只有登录和诈骗信息智能识别功能需要）
 
 后端服务位于 `FLASK` 目录下。
 
@@ -34,24 +34,20 @@ cd FLASK
 #    Windows:
 python -m venv venv
 venv\Scripts\activate
-#    macOS/Linux:
-#    python3 -m venv venv
-#    source venv/bin/activate
-
 # 3. 安装依赖
 pip install Flask Flask-CORS requests
 
 # 4. 启动服务
 python myflask2.py
 ```
-服务将在 `http://localhost:5000` 启动，并监听 `0.0.0.0` 地址，允许局域网访问。
 
 ### 2. 运行前端应用
 
-1.  使用 **HBuilderX** 打开项目根目录。
-2.  **修改IP地址**: 在 `pages/fraud-detection/fraud-detection.vue`, `pages/settings/login.vue`, `pages/settings/settings.vue` 等文件中，找到 `uni.request` 的 `url` 配置项，将其中的 IP 地址 (`http://192.168.x.x:5000`) 替换为您运行后端服务的电脑的**真实局域网IP地址**。
+1.  使用 **HBuilderX** 打开项目根目录。（有提示需要安装的插件安装一下）
+2.  **修改IP地址**: 在utils\config.js文件里找到const BASE_URL = 'http://真实局域网地址：5000'例如（‘http://132.145.11.21:5000’）
 3.  通过 HBuilderX 的 **运行** 菜单，将应用运行到模拟器或真机进行测试。
-
+真实局域网地址：
+先打开电脑的cmd，输入ipconfig，找到无线局域网适配器 WLAN下的 IPv4 地址 ：xxx.xxx.xx.xx例如（132.145.11.21）
 ## 项目结构
 
 ```
