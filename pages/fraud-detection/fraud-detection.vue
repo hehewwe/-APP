@@ -146,7 +146,7 @@
 					url: `${config.BASE_URL}/analyze_text`,
 					method: 'POST',
 					data: {
-						text: this.textToAnalyze
+						"短信文本": this.textToAnalyze
 					},
 					success: (res) => {
 						if (res.statusCode === 200) {

@@ -67,6 +67,14 @@
 		{
 			"path": "pages/settings/login",
 			"style": {
+				"navigationBarTitleText": "登录",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/admin/admin",
+			"style": {
+				"navigationBarTitleText": "后台管理",
 				"navigationStyle": "custom"
 			}
 		}

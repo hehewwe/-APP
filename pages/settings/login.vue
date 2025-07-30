@@ -4,7 +4,7 @@
 			<view class="back-button" @click="goBack">
 				<text class="icon">←</text>
 			</view>
-			<view class="title">用户登录</view>
+			<view class="title">{{ isLoginMode ? '用户登录' : '用户注册' }}</view>
 		</view>
 
 		<view class="form-container">
@@ -16,13 +16,21 @@
 				<text class="form-label">密码</text>
 				<input class="form-input" type="password" v-model="password" placeholder="请输入密码" />
 			</view>
+			<view class="form-item" v-if="!isLoginMode">
+				<text class="form-label">确认密码</text>
+				<input class="form-input" type="password" v-model="confirmPassword" placeholder="请再次输入密码" />
+			</view>
 
-			<button class="login-button" @click="handleLogin">立即登录</button>
+			<button class="login-button" @click="handleSubmit">{{ isLoginMode ? '立即登录' : '立即注册' }}</button>
 		</view>
 		
-		<view class="tips">
-			<text>测试账号: 13800138000</text>
-			<text>测试密码: 123456</text>
+		<view class="extra-links">
+			<text class="link" @click="toggleMode">{{ isLoginMode ? '没有账号？立即注册' : '已有账号？立即登录' }}</text>
+		</view>
+
+		<view class="tips" v-if="isLoginMode">
+			<text>管理员测试账号: 13800138000</text>
+			<text>管理员测试密码: 123456</text>
 		</view>
 	</view>
 </template>
@@ -34,12 +42,71 @@
 		data() {
 			return {
 				username: '',
-				password: ''
+				password: '',
+				confirmPassword: '',
+				isLoginMode: true
 			}
 		},
 		methods: {
 			goBack() {
 				uni.navigateBack();
+			},
+			toggleMode() {
+				this.isLoginMode = !this.isLoginMode;
+				this.password = '';
+				this.confirmPassword = '';
+			},
+			handleSubmit() {
+				if (this.isLoginMode) {
+					this.handleLogin();
+				} else {
+					this.handleRegister();
+				}
+			},
+			handleRegister() {
+				if (!this.username || !this.password || !this.confirmPassword) {
+					uni.showToast({ title: '请填写所有字段', icon: 'none' });
+					return;
+				}
+				if (this.password !== this.confirmPassword) {
+					uni.showToast({ title: '两次输入的密码不一致', icon: 'none' });
+					return;
+				}
+
+				uni.showLoading({ title: '注册中...' });
+
+				uni.request({
+					url: `${config.BASE_URL}/register`,
+					method: 'POST',
+					data: {
+						username: this.username,
+						password: this.password
+					},
+					success: (res) => {
+						if (res.statusCode === 200) {
+							uni.showToast({
+								title: '注册成功，请登录',
+								icon: 'success'
+							});
+							// 注册成功后切换到登录模式
+							this.toggleMode();
+						} else {
+							uni.showToast({
+								title: res.data.msg || '注册失败',
+								icon: 'none'
+							});
+						}
+					},
+					fail: (err) => {
+						uni.showToast({
+							title: '网络连接失败',
+							icon: 'error'
+						});
+					},
+					complete: () => {
+						uni.hideLoading();
+					}
+				});
 			},
 			handleLogin() {
 				if (!this.username || !this.password) {
@@ -171,6 +238,17 @@
 		margin-top: 40rpx;
 	}
 	
+	.extra-links {
+		text-align: center;
+		padding: 20rpx 40rpx 0;
+	}
+	
+	.link {
+		color: #007bff;
+		font-size: 28rpx;
+		cursor: pointer;
+	}
+
 	.tips {
 		padding: 40rpx;
 		text-align: center;

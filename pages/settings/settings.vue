@@ -12,6 +12,13 @@
 							<text class="arrow">›</text>
 						</view>
 					</view>
+					<!-- 新增：后台管理入口，仅管理员可见 -->
+					<view class="list-item" v-if="isAdmin" @click="navigateToAdmin">
+						<text class="item-title">后台管理</text>
+						<view class="item-extra">
+							<text class="arrow">›</text>
+						</view>
+					</view>
 				</view>
 			</view>
 
@@ -120,6 +127,7 @@
 				modalContent: '',
 				isLoggedIn: false, // 登录状态
 				username: '', // 用户名
+				isAdmin: false // 新增：是否为管理员
 			};
 		},
 		computed: {
@@ -183,6 +191,12 @@
 					this.smsPermissionStatus = 'denied';
 				}
 				// #endif
+			},
+			// 新增：跳转到后台管理页面
+			navigateToAdmin() {
+				uni.navigateTo({
+					url: '/pages/admin/admin'
+				});
 			},
 			async injectMockAlerts() {
 				uni.showLoading({
@@ -334,14 +348,18 @@
 						if (res.statusCode === 200 && res.data.username) {
 							this.isLoggedIn = true;
 							this.username = res.data.username;
+							// 检查角色
+							this.isAdmin = res.data.role === 'admin';
 						} else {
 							this.isLoggedIn = false;
 							this.username = '';
+							this.isAdmin = false;
 						}
 					},
 					fail: () => {
 						this.isLoggedIn = false;
 						this.username = '';
+						this.isAdmin = false;
 					}
 				});
 			},
@@ -374,6 +392,7 @@
 						});
 						this.isLoggedIn = false;
 						this.username = '';
+						this.isAdmin = false;
 						uni.$emit('user-log-changed');
 					}
 				});
