@@ -342,7 +342,7 @@
 <style scoped>
 	.home-container {
 		padding: 20rpx;
-		background-color: #f4f6f9;
+		background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
 		min-height: 100vh;
 	}
 
@@ -356,20 +356,65 @@
 		padding: 30rpx;
 		margin-bottom: 20rpx;
 		box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+		animation: cardSlideIn 0.6s ease-out;
+		transition: transform 0.3s ease, box-shadow 0.3s ease;
+	}
+	
+	.status-card:active,
+	.stats-card:active,
+	.alerts-section:active {
+		transform: scale(0.98);
+	}
+	
+	@keyframes cardSlideIn {
+		from {
+			opacity: 0;
+			transform: translateY(30rpx);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
 	}
 
 	/* 顶部状态卡片 */
 	.status-card {
 		color: #fff;
-		background: linear-gradient(45deg, #4CAF50, #81C784);
+		background: linear-gradient(135deg, #4CAF50, #81C784, #66BB6A);
+		background-size: 200% 200%;
+		animation: gradientShift 4s ease-in-out infinite;
+		position: relative;
+		overflow: hidden;
+	}
+	
+	@keyframes gradientShift {
+		0%, 100% {
+			background-position: 0% 50%;
+		}
+		50% {
+			background-position: 100% 50%;
+		}
 	}
     
 	.status-card.warning {
-		background: linear-gradient(45deg, #FF9800, #FFB74D);
+		background: linear-gradient(135deg, #FF9800, #FFB74D, #FFA726);
+		background-size: 200% 200%;
+		animation: gradientShift 3s ease-in-out infinite;
 	}
 
 	.status-card.danger {
-		background: linear-gradient(45deg, #F44336, #E57373);
+		background: linear-gradient(135deg, #F44336, #E57373, #EF5350);
+		background-size: 200% 200%;
+		animation: gradientShift 2s ease-in-out infinite, dangerPulse 1.5s ease-in-out infinite;
+	}
+	
+	@keyframes dangerPulse {
+		0%, 100% {
+			box-shadow: 0 4rpx 12rpx rgba(244, 67, 54, 0.3);
+		}
+		50% {
+			box-shadow: 0 8rpx 25rpx rgba(244, 67, 54, 0.5);
+		}
 	}
 
 	.status-header {
@@ -393,11 +438,35 @@
 	.status-indicator {
 		text-align: center;
 		padding: 40rpx 0;
+		animation: bounce 2s ease-in-out infinite;
 	}
 
 	.status-text {
 		font-size: 48rpx;
 		font-weight: bold;
+		text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.2);
+		animation: textGlow 3s ease-in-out infinite;
+	}
+	
+	@keyframes bounce {
+		0%, 20%, 50%, 80%, 100% {
+			transform: translateY(0);
+		}
+		40% {
+			transform: translateY(-10rpx);
+		}
+		60% {
+			transform: translateY(-5rpx);
+		}
+	}
+	
+	@keyframes textGlow {
+		0%, 100% {
+			text-shadow: 0 2rpx 8rpx rgba(255, 255, 255, 0.3);
+		}
+		50% {
+			text-shadow: 0 4rpx 16rpx rgba(255, 255, 255, 0.6);
+		}
 	}
 	
 	.scan-summary {
@@ -449,6 +518,18 @@
 		font-weight: bold;
 		color: #333;
 		line-height: 1;
+		animation: numberCount 1s ease-out;
+	}
+	
+	@keyframes numberCount {
+		from {
+			opacity: 0;
+			transform: scale(0.5);
+		}
+		to {
+			opacity: 1;
+			transform: scale(1);
+		}
 	}
 
 	.chart-label {
@@ -462,6 +543,20 @@
 		align-items: center;
 		font-size: 26rpx;
 		margin-bottom: 10rpx;
+		padding: 8rpx 12rpx;
+		border-radius: 8rpx;
+		transition: all 0.3s ease;
+		animation: fadeInLeft 0.5s ease-out;
+	}
+	
+	.stats-legend .legend-item:nth-child(1) { animation-delay: 0.1s; }
+	.stats-legend .legend-item:nth-child(2) { animation-delay: 0.2s; }
+	.stats-legend .legend-item:nth-child(3) { animation-delay: 0.3s; }
+	.stats-legend .legend-item:nth-child(4) { animation-delay: 0.4s; }
+	
+	.stats-legend .legend-item:active {
+		background-color: #f8f9fa;
+		transform: scale(1.05);
 	}
 
 	.legend-dot {
@@ -469,6 +564,27 @@
 		height: 16rpx;
 		border-radius: 50%;
 		margin-right: 15rpx;
+		animation: dotPulse 2s ease-in-out infinite;
+	}
+	
+	@keyframes fadeInLeft {
+		from {
+			opacity: 0;
+			transform: translateX(-20rpx);
+		}
+		to {
+			opacity: 1;
+			transform: translateX(0);
+		}
+	}
+	
+	@keyframes dotPulse {
+		0%, 100% {
+			transform: scale(1);
+		}
+		50% {
+			transform: scale(1.2);
+		}
 	}
 
 	.legend-item.high-risk .legend-dot { background-color: #F44336; }
@@ -514,17 +630,35 @@
 	.detection-button {
 		flex-shrink: 0;
 		display: flex;
-		flex-direction: row; /* <--- 修正这里，从 column 改为 row */
+		flex-direction: row;
 		align-items: center;
 		justify-content: center;
-		background-color: #007bff;
+		background: linear-gradient(135deg, #3498db, #2980b9);
 		color: #fff;
 		font-size: 28rpx;
-		border-radius: 10rpx;
+		font-weight: bold;
+		border-radius: 12rpx;
 		padding: 15rpx 30rpx;
 		line-height: 1.5;
 		margin: 0;
 		border: none;
+		box-shadow: 0 4rpx 12rpx rgba(52, 152, 219, 0.3);
+		transition: all 0.3s ease;
+		animation: buttonGlow 2s ease-in-out infinite;
+	}
+	
+	.detection-button:active {
+		transform: scale(0.95);
+		box-shadow: 0 2rpx 8rpx rgba(52, 152, 219, 0.4);
+	}
+	
+	@keyframes buttonGlow {
+		0%, 100% {
+			box-shadow: 0 4rpx 12rpx rgba(52, 152, 219, 0.3);
+		}
+		50% {
+			box-shadow: 0 6rpx 20rpx rgba(52, 152, 219, 0.5);
+		}
 	}
 	
 	.detection-button::after {

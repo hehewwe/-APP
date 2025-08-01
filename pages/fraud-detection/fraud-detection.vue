@@ -4,7 +4,8 @@
 			<view class="back-button" @click="goBack">
 				<text class="icon">←</text>
 			</view>
-			<view class="title">诈骗信息智能识别</view>
+			<view class="title">智能检测</view>
+			<view class="subtitle">AI智能分析，识别诈骗风险</view>
 		</view>
 		
 		<view class="content">
@@ -44,6 +45,18 @@
 						<text class="item-label">分析详情：</text>
 						<text class="item-value detail-text">{{result.诈骗信息}}</text>
 					</view>
+				</view>
+				
+				<!-- 诈骗信息举报引导 -->
+				<view class="report-guide" v-if="resultClass === 'high-risk'">
+					<view class="report-info">
+						<text class="report-icon">🚨</text>
+						<view class="report-text">
+							<text class="report-title">发现诈骗信息？</text>
+							<text class="report-desc">快速举报，帮助更多人避免受骗</text>
+						</view>
+					</view>
+					<button class="report-button" @click="goToReport">立即举报</button>
 				</view>
 			</view>
 		</view>
@@ -176,6 +189,39 @@
 				});
 			},
 			
+			goToReport() {
+				// 创建分类映射表
+				const categoryMapping = {
+					"刷单返利类": "a",
+					"虚假网络投资理财类": "b", 
+					"冒充电商物流客服类": "c",
+					"贷款、代办信用卡类": "d",
+					"网络游戏产品虚假交易类": "e",
+					"虚假购物、服务类": "f",
+					"冒充公检法及政府机关类": "g",
+					"虚假征信类": "h",
+					"冒充领导、熟人类": "i",
+					"冒充军警购物类诈骗": "j",
+					"网络婚恋、交友类": "k",
+					"网黑案件": "l"
+				};
+				
+				// 获取对应的分类代码
+				const typeCode = categoryMapping[this.result.诈骗类别] || 'a';
+				
+				// 构建跳转URL，传递检测结果
+				const params = {
+					type: typeCode,
+					content: encodeURIComponent(this.textToAnalyze.trim()),
+					source: '智能检测系统'
+				};
+				
+				const queryString = Object.keys(params).map(key => `${key}=${params[key]}`).join('&');
+				
+				uni.navigateTo({
+					url: `/pages/safety-center/report-page?${queryString}`
+				});
+			}
 		}
 	}
 </script>
@@ -183,7 +229,7 @@
 <style>
 	.fraud-detection-container {
 		padding: 0;
-		background-color: #f4f6f9;
+		background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
 		min-height: 100vh;
 		display: flex;
 		flex-direction: column;
@@ -193,11 +239,14 @@
 	
 	.header {
 		display: flex;
+		flex-direction: column;
 		align-items: center;
-		padding: 20rpx 30rpx;
-		background-color: #ffffff;
+		padding: 30rpx;
+		background: rgba(255, 255, 255, 0.95);
 		border-bottom: 1rpx solid #eee;
 		position: relative;
+		backdrop-filter: blur(10rpx);
+		box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
 	}
 	
 	.back-button {
@@ -216,10 +265,18 @@
 	}
 	
 	.title {
-		flex: 1;
 		text-align: center;
-		font-size: 34rpx;
+		font-size: 36rpx;
 		font-weight: bold;
+		color: #2c3e50;
+		margin-bottom: 8rpx;
+		text-shadow: 0 2rpx 4rpx rgba(44, 62, 80, 0.1);
+	}
+	
+	.subtitle {
+		font-size: 24rpx;
+		color: #7f8c8d;
+		text-align: center;
 	}
 	
 	.content {
@@ -228,34 +285,42 @@
 	}
 	
 	.input-section {
-		background-color: #ffffff;
+		background: white;
 		border-radius: 20rpx;
 		padding: 30rpx;
 		margin-bottom: 30rpx;
-		box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+		box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.1);
 	}
 	
 	.input-label {
-		font-size: 30rpx;
+		font-size: 28rpx;
 		font-weight: bold;
-		margin-bottom: 20rpx;
+		color: #2c3e50;
+		margin-bottom: 15rpx;
 	}
 	
 	.input-area {
 		width: 100%;
 		height: 300rpx;
 		padding: 20rpx;
-		font-size: 28rpx;
-		border: 1rpx solid #eee;
-		border-radius: 10rpx;
-		background-color: #f7f7f7;
+		font-size: 26rpx;
+		border: 2rpx solid #e9ecef;
+		border-radius: 12rpx;
+		background: #f8f9fa;
 		box-sizing: border-box;
+		line-height: 1.5;
+		transition: border-color 0.3s;
+	}
+	
+	.input-area:focus {
+		border-color: #3498db;
+		background: #fff;
 	}
 	
 	.char-count {
 		text-align: right;
-		font-size: 24rpx;
-		color: #999;
+		font-size: 22rpx;
+		color: #6c757d;
 		margin-top: 10rpx;
 	}
 	
@@ -264,27 +329,27 @@
 	}
 	
 	.analyze-button {
-		
-        border-left: 200rpx;
-        border-right: 200rpx;
-        border-top: 100rpx;
-        border-bottom: 100rpx;
+		width: 100%;
+		height: 88rpx;
+		display: flex;
 		flex-direction: row;
 		align-items: center;
 		justify-content: center;
-		background-color: #007bff;
+		background: linear-gradient(135deg, #3498db, #2980b9);
 		color: #fff;
-		font-size: 40rpx;
-		border-radius: 20rpx;
-		padding: 20rpx 0;
-		width: 100%;
-		margin: 0 auto;
+		font-size: 32rpx;
+		font-weight: bold;
+		border-radius: 44rpx;
 		border: none;
+		margin: 0 auto;
+		box-shadow: 0 4rpx 12rpx rgba(52, 152, 219, 0.3);
+		transition: all 0.3s;
 	}
 	
 	.analyze-button[disabled] {
-		background-color: #cccccc;
-		color: #ffffff;
+		background: #bdc3c7;
+		color: #7f8c8d;
+		box-shadow: none;
 	}
 	
 	.analyze-button::after {
@@ -292,15 +357,27 @@
 	}
 	
 	.button-icon {
-		font-size: 36rpx;
-		margin-right: 10rpx;
+		font-size: 32rpx;
+		margin-right: 8rpx;
 	}
 	
 	.result-section {
-		background-color: #ffffff;
+		background: white;
 		border-radius: 20rpx;
 		padding: 30rpx;
-		box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+		box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.1);
+		animation: slideInUp 0.3s ease-out;
+	}
+	
+	@keyframes slideInUp {
+		from {
+			opacity: 0;
+			transform: translateY(30rpx);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
 	}
 	
 	.result-header {
@@ -375,9 +452,81 @@
 	.detail-text {
 		font-weight: normal;
 		line-height: 1.6;
-		background-color: #f7f7f7;
+		background: #f8f9fa;
 		padding: 20rpx;
-		border-radius: 10rpx;
+		border-radius: 12rpx;
 		font-size: 26rpx;
+		border-left: 4rpx solid #3498db;
+	}
+	
+	/* 举报引导样式 */
+	.report-guide {
+		margin-top: 30rpx;
+		padding: 25rpx;
+		background: linear-gradient(135deg, #e74c3c, #c0392b);
+		border-radius: 16rpx;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		box-shadow: 0 6rpx 16rpx rgba(231, 76, 60, 0.3);
+		animation: pulse 2s infinite;
+	}
+	
+	@keyframes pulse {
+		0%, 100% {
+			transform: scale(1);
+		}
+		50% {
+			transform: scale(1.02);
+		}
+	}
+	
+	.report-info {
+		display: flex;
+		align-items: center;
+		flex: 1;
+	}
+	
+	.report-icon {
+		font-size: 48rpx;
+		margin-right: 20rpx;
+	}
+	
+	.report-text {
+		display: flex;
+		flex-direction: column;
+	}
+	
+	.report-title {
+		font-size: 28rpx;
+		font-weight: bold;
+		color: #ffffff;
+		margin-bottom: 5rpx;
+	}
+	
+	.report-desc {
+		font-size: 24rpx;
+		color: #ffe6e6;
+	}
+	
+	.report-button {
+		padding: 12rpx 24rpx;
+		background: white;
+		color: #e74c3c;
+		font-size: 24rpx;
+		font-weight: bold;
+		border-radius: 20rpx;
+		border: 2rpx solid rgba(255, 255, 255, 0.3);
+		box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.15);
+		min-width: 120rpx;
+		transition: all 0.3s;
+	}
+	
+	.report-button:active {
+		transform: scale(0.95);
+	}
+	
+	.report-button::after {
+		border: none;
 	}
 </style> 

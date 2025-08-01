@@ -77,6 +77,19 @@
 				"navigationBarTitleText": "后台管理",
 				"navigationStyle": "custom"
 			}
+		},
+		{
+			"path": "pages/safety-center/flappy-bird-game",
+			"style": {
+				"navigationBarTitleText": "小鸟飞飞飞",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/safety-center/report-page",
+			"style": {
+				"navigationBarTitleText": "快速举报"
+			}
 		}
 	],
 	"globalStyle": {

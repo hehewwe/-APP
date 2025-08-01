@@ -11,6 +11,7 @@
 			<button :class="['table-button', currentView === 'user' ? 'active' : '']" @click="switchView('user')">用户表</button>
 			<button :class="['table-button', currentView === 'sms_record' ? 'active' : '']" @click="switchView('sms_record')">记录表</button>
 			<button :class="['table-button', currentView === 'case_serial' ? 'active' : '']" @click="switchView('case_serial')">编号表统计</button>
+			<button :class="['table-button', currentView === 'report_record' ? 'active' : '']" @click="switchView('report_record')">举报管理</button>
 		</view>
 
 		<!-- 用户表 -->
@@ -138,6 +139,106 @@
 			</view>
 
 		</view>
+
+		<!-- 举报管理 -->
+		<view class="content-area" v-if="currentView === 'report_record'">
+			<!-- 状态筛选和统计 -->
+			<view class="report-controls">
+				<view class="status-filter">
+					<text class="filter-label">状态筛选：</text>
+					<picker mode="selector" :value="reportStatusIndex" :range="reportStatusOptions" 
+							range-key="label" @change="onReportStatusChange">
+						<button class="filter-button">{{ reportStatusOptions[reportStatusIndex].label }}</button>
+					</picker>
+				</view>
+				
+				<view class="report-stats">
+					<view class="stat-item pending">
+						<text class="stat-number">{{ reportStats.pending }}</text>
+						<text class="stat-label">待处理</text>
+					</view>
+					<view class="stat-item processing">
+						<text class="stat-number">{{ reportStats.processing }}</text>
+						<text class="stat-label">处理中</text>
+					</view>
+					<view class="stat-item resolved">
+						<text class="stat-number">{{ reportStats.resolved }}</text>
+						<text class="stat-label">已处理</text>
+					</view>
+				</view>
+			</view>
+
+			<!-- 举报列表 -->
+			<view v-if="isLoading" class="loading-tip">正在加载...</view>
+			<view v-else-if="reportData.length === 0" class="empty-tip">暂无举报记录</view>
+			
+			<view v-else class="report-list">
+				<view v-for="report in reportData" :key="report.id" class="report-card">
+					<view class="report-header">
+						<view class="report-info">
+							<text class="report-id">ID: {{ report.id }}</text>
+							<text class="report-type">{{ getReportTypeLabel(report.report_type) }}</text>
+						</view>
+						<view :class="['status-badge', report.status]">
+							{{ getStatusLabel(report.status) }}
+						</view>
+					</view>
+					
+					<view class="report-content">
+						<view class="content-row">
+							<text class="label">举报用户：</text>
+							<text class="value">{{ report.username }}</text>
+						</view>
+						<view class="content-row">
+							<text class="label">来源信息：</text>
+							<text class="value">{{ report.source_info || '未提供' }}</text>
+						</view>
+						<view class="content-row">
+							<text class="label">举报内容：</text>
+							<text class="value content-text">{{ report.content }}</text>
+						</view>
+						<view class="content-row">
+							<text class="label">提交时间：</text>
+							<text class="value">{{ report.created_at }}</text>
+						</view>
+						<view class="content-row" v-if="report.updated_at !== report.created_at">
+							<text class="label">更新时间：</text>
+							<text class="value">{{ report.updated_at }}</text>
+						</view>
+					</view>
+					
+					<view class="report-actions">
+						<button v-if="report.status === 'pending'" 
+								class="action-btn start-btn" 
+								@click="updateReportStatus(report.id, 'processing')">
+							开始处理
+						</button>
+						<button v-if="report.status === 'processing'" 
+								class="action-btn complete-btn" 
+								@click="updateReportStatus(report.id, 'resolved')">
+							标记完成
+						</button>
+						<button v-if="report.status === 'resolved'" 
+								class="action-btn reopen-btn" 
+								@click="updateReportStatus(report.id, 'pending')">
+							重新打开
+						</button>
+						<button class="action-btn delete-btn" @click="confirmDeleteReport(report)">
+							删除
+						</button>
+					</view>
+				</view>
+			</view>
+
+			<!-- 分页 -->
+			<view class="pagination" v-if="reportPagination.pages > 1">
+				<button class="page-btn" :disabled="reportPagination.current_page <= 1" 
+						@click="loadReportPage(reportPagination.current_page - 1)">上一页</button>
+				<text class="page-info">{{ reportPagination.current_page }} / {{ reportPagination.pages }}</text>
+				<button class="page-btn" :disabled="reportPagination.current_page >= reportPagination.pages" 
+						@click="loadReportPage(reportPagination.current_page + 1)">下一页</button>
+			</view>
+		</view>
 		
 		<!-- 全文弹窗 -->
 		<view v-if="fullText" class="modal-overlay" @click="fullText = ''">
@@ -198,7 +299,18 @@
 				fraudTypeOptions: ['全部类型', '刷单返利类', '虚假网络投资理财类', '冒充电商物流客服类', '贷款、代办信用卡类', '网络游戏产品虚假交易类', '虚假购物、服务类', '冒充公检法及政府机关类', '虚假征信类', '冒充领导、熟人类', '冒充军警购物类诈骗', '网络婚恋、交友类', '网黑案件', '正常信息'],
 				recordsData: [],
 				pagination: { total: 0, pages: 1, current_page: 1, per_page: 10 },
-				fullText: ''
+				fullText: '',
+				// 举报管理数据
+				reportData: [],
+				reportPagination: { total: 0, pages: 1, current_page: 1, per_page: 10 },
+				reportStats: { pending: 0, processing: 0, resolved: 0 },
+				reportStatusIndex: 0,
+				reportStatusOptions: [
+					{ label: '全部状态', value: '' },
+					{ label: '待处理', value: 'pending' },
+					{ label: '处理中', value: 'processing' },
+					{ label: '已处理', value: 'resolved' }
+				]
 			};
 		},
 		onLoad() {
@@ -230,6 +342,9 @@
 				} else if (view === 'case_serial') {
 					this.fetchChartData();
 					this.fetchSimpleTable(view); // 同时获取表格数据
+				} else if (view === 'report_record') {
+					this.fetchReportData();
+					this.fetchReportStats();
 				}
 			},
 			// --- 新增：图表方法 ---
@@ -434,6 +549,145 @@
 					fail: () => uni.showToast({ title: '网络错误', icon: 'error' }),
 					complete: () => uni.hideLoading()
 				});
+			},
+			
+			// --- 举报管理方法 ---
+			fetchReportData(page = 1) {
+				this.isLoading = true;
+				const statusFilter = this.reportStatusOptions[this.reportStatusIndex].value;
+				
+				uni.request({
+					url: `${config.BASE_URL}/admin/reports`,
+					data: {
+						page: page,
+						per_page: 10,
+						status: statusFilter
+					},
+					success: (res) => {
+						if (res.statusCode === 200) {
+							this.reportData = res.data.data;
+							this.reportPagination = {
+								total: res.data.total,
+								pages: res.data.pages,
+								current_page: res.data.current_page,
+								per_page: 10
+							};
+						} else {
+							uni.showToast({ title: res.data.msg || '获取举报数据失败', icon: 'none' });
+						}
+					},
+					fail: () => uni.showToast({ title: '网络错误', icon: 'error' }),
+					complete: () => this.isLoading = false
+				});
+			},
+			
+			fetchReportStats() {
+				// 统计各状态的数量
+				uni.request({
+					url: `${config.BASE_URL}/admin/reports`,
+					data: { per_page: 1000 }, // 获取所有数据来统计
+					success: (res) => {
+						if (res.statusCode === 200) {
+							const allReports = res.data.data;
+							this.reportStats = {
+								pending: allReports.filter(r => r.status === 'pending').length,
+								processing: allReports.filter(r => r.status === 'processing').length,
+								resolved: allReports.filter(r => r.status === 'resolved').length
+							};
+						}
+					}
+				});
+			},
+			
+			onReportStatusChange(e) {
+				this.reportStatusIndex = e.detail.value;
+				this.fetchReportData(1);
+			},
+			
+			loadReportPage(page) {
+				this.fetchReportData(page);
+			},
+			
+			updateReportStatus(reportId, newStatus) {
+				uni.showLoading({ title: '更新中...' });
+				
+				uni.request({
+					url: `${config.BASE_URL}/admin/reports/${reportId}/status`,
+					method: 'PUT',
+					data: { status: newStatus },
+					success: (res) => {
+						if (res.statusCode === 200) {
+							uni.showToast({ title: '状态更新成功', icon: 'success' });
+							this.fetchReportData(this.reportPagination.current_page);
+							this.fetchReportStats();
+						} else {
+							uni.showToast({ title: res.data.msg || '更新失败', icon: 'none' });
+						}
+					},
+					fail: () => uni.showToast({ title: '网络错误', icon: 'error' }),
+					complete: () => uni.hideLoading()
+				});
+			},
+			
+			confirmDeleteReport(report) {
+				uni.showModal({
+					title: '确认删除',
+					content: `确定要删除举报ID: ${report.id} 吗？此操作不可撤销。`,
+					success: (res) => {
+						if (res.confirm) {
+							this.deleteReport(report.id);
+						}
+					}
+				});
+			},
+			
+			deleteReport(reportId) {
+				uni.showLoading({ title: '删除中...' });
+				
+				// 由于后端暂时没有删除接口，这里可以先用通用删除接口
+				// 后期可以添加专门的举报删除接口
+				uni.request({
+					url: `${config.BASE_URL}/admin/data/report_record/${reportId}`,
+					method: 'DELETE',
+					success: (res) => {
+						if (res.statusCode === 200) {
+							uni.showToast({ title: '删除成功', icon: 'success' });
+							this.fetchReportData(this.reportPagination.current_page);
+							this.fetchReportStats();
+						} else {
+							uni.showToast({ title: res.data.msg || '删除失败', icon: 'none' });
+						}
+					},
+					fail: () => uni.showToast({ title: '网络错误', icon: 'error' }),
+					complete: () => uni.hideLoading()
+				});
+			},
+			
+			getReportTypeLabel(type) {
+				const typeMap = {
+					'a': '刷单返利类',
+					'b': '虚假网络投资理财类',
+					'c': '冒充电商物流客服类',
+					'd': '贷款、代办信用卡类',
+					'e': '网络游戏产品虚假交易类',
+					'f': '虚假购物、服务类',
+					'g': '冒充公检法及政府机关类',
+					'h': '虚假征信类',
+					'i': '冒充领导、熟人类',
+					'j': '冒充军警购物类诈骗',
+					'k': '网络婚恋、交友类',
+					'l': '网黑案件'
+				};
+				return typeMap[type] || type;
+			},
+			
+			getStatusLabel(status) {
+				const statusMap = {
+					'pending': '待处理',
+					'processing': '处理中',
+					'resolved': '已处理'
+				};
+				return statusMap[status] || status;
 			}
 		}
 	}
@@ -491,6 +745,179 @@
 .record-delete { position: absolute; right: 20rpx; bottom: 20rpx; }
 
 .pagination { display: flex; justify-content: space-around; align-items: center; padding: 30rpx 0; font-size: 28rpx; }
+
+/* 举报管理样式 */
+.report-controls { 
+	background-color: #fff; 
+	padding: 20rpx; 
+	border-radius: 15rpx; 
+	margin-bottom: 20rpx; 
+}
+
+.status-filter { 
+	display: flex; 
+	align-items: center; 
+	margin-bottom: 20rpx; 
+}
+
+.filter-label { 
+	font-size: 28rpx; 
+	margin-right: 15rpx; 
+	color: #333; 
+}
+
+.filter-button { 
+	background-color: #007bff; 
+	color: #fff; 
+	font-size: 26rpx; 
+	padding: 10rpx 20rpx; 
+	border-radius: 8rpx; 
+}
+
+.report-stats { 
+	display: flex; 
+	justify-content: space-around; 
+}
+
+.stat-item { 
+	text-align: center; 
+	padding: 15rpx; 
+	border-radius: 10rpx; 
+}
+
+.stat-item.pending { background-color: #fff3cd; }
+.stat-item.processing { background-color: #d4edda; }
+.stat-item.resolved { background-color: #d1ecf1; }
+
+.stat-number { 
+	display: block; 
+	font-size: 32rpx; 
+	font-weight: bold; 
+	color: #333; 
+}
+
+.stat-label { 
+	display: block; 
+	font-size: 24rpx; 
+	color: #666; 
+	margin-top: 5rpx; 
+}
+
+.report-list { 
+	display: flex; 
+	flex-direction: column; 
+	gap: 15rpx; 
+}
+
+.report-card { 
+	background-color: #fff; 
+	border-radius: 15rpx; 
+	padding: 20rpx; 
+	box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1); 
+}
+
+.report-header { 
+	display: flex; 
+	justify-content: space-between; 
+	align-items: center; 
+	margin-bottom: 15rpx; 
+	padding-bottom: 10rpx; 
+	border-bottom: 1rpx solid #eee; 
+}
+
+.report-info { 
+	display: flex; 
+	gap: 15rpx; 
+}
+
+.report-id { 
+	font-size: 24rpx; 
+	color: #666; 
+}
+
+.report-type { 
+	background-color: #e9ecef; 
+	padding: 4rpx 12rpx; 
+	border-radius: 12rpx; 
+	font-size: 22rpx; 
+	color: #495057; 
+}
+
+.status-badge { 
+	padding: 8rpx 16rpx; 
+	border-radius: 20rpx; 
+	font-size: 22rpx; 
+	color: #fff; 
+	font-weight: bold; 
+}
+
+.status-badge.pending { background-color: #ffc107; }
+.status-badge.processing { background-color: #28a745; }
+.status-badge.resolved { background-color: #17a2b8; }
+
+.report-content { 
+	margin-bottom: 15rpx; 
+}
+
+.content-row { 
+	display: flex; 
+	margin-bottom: 8rpx; 
+	font-size: 26rpx; 
+}
+
+.content-row .label { 
+	width: 180rpx; 
+	flex-shrink: 0; 
+	color: #666; 
+	font-weight: bold; 
+}
+
+.content-row .value { 
+	flex: 1; 
+	color: #333; 
+}
+
+.content-text { 
+	line-height: 1.5; 
+	word-break: break-all; 
+}
+
+.report-actions { 
+	display: flex; 
+	gap: 10rpx; 
+	flex-wrap: wrap; 
+}
+
+.action-btn { 
+	padding: 12rpx 20rpx; 
+	border-radius: 8rpx; 
+	font-size: 24rpx; 
+	border: none; 
+	color: #fff; 
+}
+
+.start-btn { background-color: #28a745; }
+.complete-btn { background-color: #17a2b8; }
+.reopen-btn { background-color: #ffc107; color: #212529; }
+.delete-btn { background-color: #dc3545; }
+
+.page-btn { 
+	background-color: #007bff; 
+	color: #fff; 
+	padding: 12rpx 24rpx; 
+	border-radius: 8rpx; 
+	font-size: 26rpx; 
+}
+
+.page-btn:disabled { 
+	background-color: #6c757d; 
+	opacity: 0.6; 
+}
+
+.page-info { 
+	font-size: 26rpx; 
+	color: #666; 
+}
 
 .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; }
 .modal-content { background-color: #fff; padding: 40rpx; border-radius: 15rpx; width: 80%; max-height: 70%; }
